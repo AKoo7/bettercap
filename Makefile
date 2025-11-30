@@ -1,42 +1,58 @@
-TARGET   ?= bettercap
-PACKAGES ?= core firewall log modules network packets session tls
-PREFIX   ?= /usr/local
-GO       ?= go
+include $(TOPDIR)/rules.mk
 
-all: build
+PKG_NAME:=bettercap
+PKG_VERSION:=2.41.3
+PKG_RELEASE:=1
 
-build: resources
-	$(GO) build $(GOFLAGS) -o $(TARGET) .
+PKG_SOURCE:=v2.41.3.tar.gz
+PKG_SOURCE_URL:=https://github.com/bettercap/bettercap/archive/refs/tags/
+PKG_HASH:=skip
 
-build_with_race_detector: resources
-	$(GO) build $(GOFLAGS) -race -o $(TARGET) .
+# GOOS:=linux
+# GOARCH:=arm64
+# CGO_ENABLED:=1
 
-resources: network/manuf.go
+# GO_CFLAGS:=-fPIC
+# GO_LDFLAGS:=-fPIC
 
-network/manuf.go:
-	@python3 ./network/make_manuf.py
+# export CGO_ENABLED GOOS GOARCH
 
-install:
-	@mkdir -p $(DESTDIR)$(PREFIX)/share/bettercap/caplets
-	@cp bettercap $(DESTDIR)$(PREFIX)/bin/
 
-docker:
-	@docker build -t bettercap:latest .
+#https://github.com/bettercap/bettercap/archive/refs/tags/v2.41.3.tar.gz
 
-test:
-	$(GO) test -covermode=atomic -coverprofile=cover.out ./...
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
-html_coverage: test
-	$(GO) tool cover -html=cover.out -o cover.out.html
+PKG_LICENSE:=GPL-3.0
+PKG_LICENSE_FILE:=LICENSE
 
-benchmark: server_deps
-	$(GO) test -v -run=doNotRunTests -bench=. -benchmem ./...
+PKG_BUILD_DEPENDS:=golang/host
 
-fmt:
-	$(GO) fmt -s -w $(PACKAGES)
+include $(INCLUDE_DIR)/package.mk
+include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-clean:
-	$(RM) $(TARGET)
-	$(RM) -r build
+GO_PKG:=github.com/bettercap/bettercap
+GO_PKG_BUILD_PKG:=$(GO_PKG)
 
-.PHONY: all build build_with_race_detector resources install docker test html_coverage benchmark fmt clean
+define Package/bettercap
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=Bettercap - Network attack/monitoring toolkit
+  URL:=https://bettercap.org/
+  DEPENDS:=$(GO_ARCH_DEPENDS) +libpcap +libusb-1.0
+endef
+
+define Package/bettercap/description
+Bettercap is a powerful, flexible and portable tool for real-time network
+monitoring, traffic manipulation, protocol attacks, and more.
+endef
+
+define Build/Prepare
+	$(call Build/Prepare/Default)
+endef
+
+define Package/bettercap/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(GO_PKG_BUILD_BIN_DIR)/bettercap $(1)/usr/bin/
+endef
+
+$(eval $(call BuildPackage,bettercap))

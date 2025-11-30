@@ -5,7 +5,7 @@ PKG_VERSION:=2.41.3
 PKG_RELEASE:=1
 
 PKG_SOURCE:=v2.41.3.tar.gz
-PKG_SOURCE_URL:=https://github.com/bettercap/bettercap/archive/refs/tags/
+PKG_SOURCE_URL:=https://github.com/AKoo7/bettercap/archive/refs/tags/
 PKG_HASH:=skip
 
 # GOOS:=linux
